@@ -37,6 +37,11 @@ namespace SUF.Common.GeneralPurpose
             return Target == null ? string.Format("WeakReference<{0}> (empty)", typeof(T).Name) : Target.ToString();
         }
 
+        public override int GetHashCode()
+        {
+            return Target != null ? Target.GetHashCode() : reference.GetHashCode();
+        }
+
         public static implicit operator WeakReference<T>(T t)
         {
             return t == null ? new WeakReference<T>() : new WeakReference<T>(t);
