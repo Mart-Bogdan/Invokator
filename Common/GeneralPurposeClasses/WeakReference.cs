@@ -29,7 +29,7 @@ namespace SUF.Common.GeneralPurpose
         {
             get
             {
-                return IsAlive ? reference.Target as T : null;
+                return reference.Target as T;
             }
         }
 
