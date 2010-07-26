@@ -61,7 +61,6 @@ namespace TestProject
                 var @delegate = new WeakDelegate<Func<String, int, String>>(Sm);
                 var invoke = @delegate.Invoke("sd", 1);
                 Assert.AreNotEqual(invoke, "sd");
-                GC.Collect();
             }
             catch (Exception e)
             {
