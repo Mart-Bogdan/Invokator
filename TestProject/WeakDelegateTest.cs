@@ -101,6 +101,38 @@ namespace TestProject
 
         }
 
+        [TestMethod]
+        public void VoidRet()
+        {
+            try
+            {
+                var @delegate = new WeakDelegate<Action<String, int>>(Vm);
+                @delegate.Invoke("sd", 5);
+
+            }
+            catch (Exception e)
+            {
+                throw e;
+            }
+
+        }
+
+        [TestMethod]
+        public void IntRet()
+        {
+            try
+            {
+                var @delegate = new WeakDelegate<Func<int, int>>(Im);
+                var invoke = @delegate.Invoke(1);
+                Assert.AreNotEqual(invoke, 1);
+            }
+            catch (Exception e)
+            {
+                throw e;
+            }
+
+        }
+
         public String Sm(String s)
         {
             return s;
@@ -108,6 +140,13 @@ namespace TestProject
         public String Sm(String s, int o)
         {
             return s;
+        }
+        public void Vm(String s, int o)
+        {
+        }
+        public int  Im( int o)
+        {
+            return o;
         }
     }
 }

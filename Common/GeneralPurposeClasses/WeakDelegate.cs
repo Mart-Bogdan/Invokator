@@ -1,4 +1,6 @@
-﻿using System;
+﻿// INNAHEMA
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -12,7 +14,7 @@ using JetBrains.Annotations;
 namespace SUF.Common.GeneralPurpose
 {
     /// <summary>
-    /// Как и не типизированый делегат содержыт метод DynamicInvoke и может содержать в себе много делегатов но при этом не мешает работать GC
+    /// Как и не типизированый делегат содержит метод DynamicInvoke и может содержать в себе много делегатов но при этом не мешает работать GC
     /// </summary>
     public abstract class WeakDelegate
     {
@@ -29,7 +31,7 @@ namespace SUF.Common.GeneralPurpose
     }
 
     /// <summary>
-    /// Как и делегат содержыт метод Invoke и может содержать в себе много делегатов но при этом не мешает работать GC
+    /// Как и делегат содержит метод Invoke и может содержать в себе много делегатов но при этом не мешает работать GC
     /// </summary>
     public sealed class WeakDelegate<TDelegate> : WeakDelegate
         where TDelegate:class 
@@ -46,7 +48,7 @@ namespace SUF.Common.GeneralPurpose
 
             if(paramSig.Length!=0 && paramSig.FirstOrDefault(p=>p.IsOut|p.IsRetval)!=null)
                 throw ExceptionHelper.Throw<NotSupportedException>(
-                    "Делегаты с типом праметров Ret/Out пока не потдержываются, если надо обращайтесь к winnie");
+                    "Делегаты с типом праметров Ret/Out пока не потдерживаются, если надо обращайтесь к winnie");
 
             var module = DynamicAssemblyProvider.GetModule("WeakDelegation");
 
@@ -85,8 +87,14 @@ namespace SUF.Common.GeneralPurpose
             
 
             met_helper
-                .call(typeof (Invokator).GetMethod("DynamicInvoke",(BindingFlags)(-1)))
-                .ret();
+                .call(typeof (Invokator).GetMethod("DynamicInvoke",(BindingFlags)(-1)));
+            if (signature.ReturnType != typeof (void))
+                met_helper
+                    .ret();
+            else
+                met_helper
+                    .pop
+                    .ret();
 
             new EmitHelper(
                 typeBuilder.DefineMethod("Instantiate", MethodAttributes.Static, typeof(Invokator), new[] { typeof(WeakDelegate<TDelegate>) })
@@ -117,6 +125,46 @@ namespace SUF.Common.GeneralPurpose
                         c += dels.RemoveAll(d => d.e1.Target == del.Target & d.e2 == del.Method);
 
             return c != 0;
+        }
+
+        public bool Contains(TDelegate @delegate)
+        {
+            if (@delegate != null)
+                lock (dels)
+                    foreach (var del in ((Delegate)(object)@delegate).GetInvocationList())
+                        if (!dels.Where(d => d.e1.Target == del.Target & d.e2 == del.Method).IsEmpty())
+                            return true;
+
+            return false;
+        }
+
+
+        public int Count
+        {
+            get
+            {
+                Clean();
+                return dels.Count();
+            }
+        }
+
+        private void Clean()
+        {
+            var toDel = new List<Tuple<WeakReference, MethodInfo>>();
+            lock (dels)
+            {
+                foreach (var del in dels)
+                {
+                    var target = del.e1.Target;
+                    var method = del.e2;
+
+                    if (!method.IsStatic && !del.e1.IsAlive)
+                    {
+                        toDel.Add(del);
+                    }
+                }
+                dels.RemoveAll(toDel.Contains);
+            }
         }
 
         /// <summary></summary>
@@ -191,7 +239,8 @@ namespace SUF.Common.GeneralPurpose
 
         /// <summary>Вызов делегата!</summary>
         public TDelegate Invoke
-        {[DebuggerStepThrough]
+        {
+            [DebuggerStepThrough]
             get
             {
                 return _invoke;
