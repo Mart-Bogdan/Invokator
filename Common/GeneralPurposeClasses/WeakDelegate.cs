@@ -90,6 +90,7 @@ namespace SUF.Common.GeneralPurpose
                 .call(typeof (Invokator).GetMethod("DynamicInvoke",(BindingFlags)(-1)));
             if (signature.ReturnType != typeof (void))
                 met_helper
+                    .unboxIfValueType(signature.ReturnType)
                     .ret();
             else
                 met_helper
@@ -288,7 +289,7 @@ namespace SUF.Common.GeneralPurpose
                     var method = del.e2;
 
                     if (method.IsStatic || target != null)
-                        method.Invoke(target, parms);
+                        ret = method.Invoke(target, parms);
                     else
                     {
                         toDel.Add(del);

@@ -54,49 +54,49 @@ namespace TestProject
         #endregion
 
         [TestMethod]
-        public void TestMethod1()
+        public void SRet_2p()
         {
             try
             {
                 var @delegate = new WeakDelegate<Func<String, int, String>>(Sm);
                 var invoke = @delegate.Invoke("sd", 1);
-                Assert.AreNotEqual(invoke, "sd");
+                Assert.AreEqual(invoke , "sd");
             }
             catch (Exception e)
             {
-                throw e;
+                throw;
             }
 
         }
 
         [TestMethod]
-        public void TestMethod2()
+        public void SRet()
         {
             try
             {
                 var @delegate = new WeakDelegate<Func<String, String>>(Sm);
                 var invoke = @delegate.Invoke("sd");
-                Assert.AreNotEqual(invoke, "sd");
+                Assert.AreEqual(invoke, "sd");
             }
             catch (Exception e)
             {
-                throw e;
+                throw;
             }
 
         }
 
         [TestMethod]
-        public void TestMethod3()
+        public void DynInvSret_2p()
         {
             try
             {
                 var @delegate = new WeakDelegate<Func<String, int, String>>(Sm);
                 var invoke = @delegate.DynamicInvoke("sd", 5);
-                Assert.AreNotEqual(invoke, "sd");
+                Assert.AreEqual(invoke, "sd");
             }
             catch (Exception e)
             {
-                throw e;
+                throw;
             }
 
         }
@@ -112,7 +112,7 @@ namespace TestProject
             }
             catch (Exception e)
             {
-                throw e;
+                throw;
             }
 
         }
@@ -124,11 +124,28 @@ namespace TestProject
             {
                 var @delegate = new WeakDelegate<Func<int, int>>(Im);
                 var invoke = @delegate.Invoke(1);
-                Assert.AreNotEqual(invoke, 1);
+                Assert.AreEqual(1, invoke);
             }
             catch (Exception e)
             {
-                throw e;
+                throw;
+            }
+
+        }
+
+        [TestMethod]
+        public void GuidRet()
+        {
+            try
+            {
+                var @delegate = new WeakDelegate<Func<Guid, Guid>>(Gm);
+                var id = Guid.NewGuid();
+                var invoke = @delegate.Invoke(id);
+                Assert.AreEqual( id, invoke);
+            }
+            catch (Exception e)
+            {
+                throw ;
             }
 
         }
@@ -144,7 +161,11 @@ namespace TestProject
         public void Vm(String s, int o)
         {
         }
-        public int  Im( int o)
+        public int Im(int o)
+        {
+            return o;
+        }
+        public Guid Gm(Guid o)
         {
             return o;
         }
