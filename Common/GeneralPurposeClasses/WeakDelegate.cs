@@ -123,7 +123,10 @@ namespace SUF.Common.GeneralPurpose
             if (@delegate != null)
                 lock (dels)
                     foreach (var del in ((Delegate)(object)@delegate).GetInvocationList())
-                        c += dels.RemoveAll(d => d.e1.Target == del.Target & d.e2 == del.Method);
+                        if (del.Method.IsStatic)
+                            _invk = Delegate.Remove(_invk, del);
+                        else
+                            c += dels.RemoveAll(d => d.e1.Target == del.Target & d.e2 == del.Method.GetInvokator());
 
             return c != 0;
         }
@@ -133,8 +136,11 @@ namespace SUF.Common.GeneralPurpose
             if (@delegate != null)
                 lock (dels)
                     foreach (var del in ((Delegate)(object)@delegate).GetInvocationList())
-                        if (!dels.Where(d => d.e1.Target == del.Target & d.e2 == del.Method).IsEmpty())
-                            return true;
+                        if (del.Method.IsStatic)
+                            return _invk.GetInvocationList().Contains(del);
+                        else
+                            if (!dels.Where(d => d.e1.Target == del.Target & d.e2 == del.Method.GetInvokator()).IsEmpty())
+                                return true;
 
             return false;
         }
@@ -151,19 +157,13 @@ namespace SUF.Common.GeneralPurpose
 
         private void Clean()
         {
-            var toDel = new List<Tuple<WeakReference, MethodInfo>>();
+            var toDel = new HashSet<Tuple<WeakReference, Func<object, object[], object>>>();
             lock (dels)
             {
                 foreach (var del in dels)
-                {
-                    var target = del.e1.Target;
-                    var method = del.e2;
-
-                    if (!method.IsStatic && !del.e1.IsAlive)
-                    {
+                    if (!del.e1.IsAlive)
                         toDel.Add(del);
-                    }
-                }
+
                 dels.RemoveAll(toDel.Contains);
             }
         }
@@ -174,7 +174,10 @@ namespace SUF.Common.GeneralPurpose
             if (@delegate != null)
                 lock (dels)
                     foreach (var del in ((Delegate)(object)@delegate).GetInvocationList())
-                        dels.Add(new Tuple<WeakReference, MethodInfo>(new WeakReference(del.Target), del.Method));
+                        if(del.Method.IsStatic)
+                            _invk = Delegate.Combine(_invk , del);
+                        else
+                            dels.Add(new Tuple<WeakReference, Func<object, object[], object>>(new WeakReference(del.Target), del.Method.GetInvokator()));
         }
 
         /// <summary>Копирует все списки вызова из целевого делегата</summary>
@@ -182,8 +185,14 @@ namespace SUF.Common.GeneralPurpose
         {
             if (other != null)
                 lock (dels)
+                {
                     lock (other.dels)
                         dels.AddRange(other.dels);
+
+                    foreach (var del in other._invk.GetInvocationList())
+                        if (!del.Equals(other.Invoke))
+                            _invk = Delegate.Combine(_invk, del);
+                }
         }
 
         #region Constructors
@@ -232,9 +241,20 @@ namespace SUF.Common.GeneralPurpose
         Invokator invokator;
         private static readonly MethodInfo invMethod;
 
-        private List<Tuple<WeakReference, MethodInfo>> dels = new List<Tuple<WeakReference, MethodInfo>>();
+        private List<Tuple<WeakReference, Func<object, object[], object>>> dels = new List<Tuple<WeakReference, Func<object, object[], object>>>();
 
         private TDelegate _invoke;
+        private Delegate _invk
+        {
+            get
+            {
+                return (Delegate)(object)_invoke;
+            }
+            set
+            {
+                _invoke = (TDelegate)(object)value;
+            }
+        }
         private static Func<WeakDelegate<TDelegate>,Invokator> invokator_creator;
         private static ParameterInfo[] paramSig;
 
@@ -279,7 +299,7 @@ namespace SUF.Common.GeneralPurpose
 
         private object _dynamicInvoke(params object[] parms)
         {
-            var toDel = new List<Tuple<WeakReference, MethodInfo>>();
+            var toDel = new List<Tuple<WeakReference, Func<object, object[], object>>>();
             object ret = null;
             lock (dels)
             {
@@ -288,7 +308,7 @@ namespace SUF.Common.GeneralPurpose
                     var target = del.e1.Target;
                     var method = del.e2;
 
-                    if (method.IsStatic || target != null)
+                    if ( target != null)
                         ret = method.Invoke(target, parms);
                     else
                     {

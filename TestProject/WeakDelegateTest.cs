@@ -60,13 +60,44 @@ namespace TestProject
             {
                 var @delegate = new WeakDelegate<Func<String, int, String>>(Sm);
                 var invoke = @delegate.Invoke("sd", 1);
-                Assert.AreEqual(invoke , "sd");
+                Assert.AreEqual(invoke, "sd");
             }
             catch (Exception e)
             {
                 throw;
             }
+        }
 
+        [TestMethod]
+        public void Unsubscribe()
+        {
+            try
+            {
+                var @delegate = new WeakDelegate<Func<String, int, String>>(Sm);
+                @delegate -= Sm;
+                var invoke = @delegate.Invoke("sd", 1);
+                Assert.AreEqual(null, invoke);
+            }
+            catch (Exception e)
+            {
+                throw;
+            }
+        }
+
+        [TestMethod]
+        public void UnsubscribeStatic()
+        {
+            try
+            {
+                var @delegate = new WeakDelegate<Func<String,String>>(sSm);
+                @delegate -= sSm;
+                var invoke = @delegate.Invoke("sd");
+                Assert.AreEqual(null, invoke);
+            }
+            catch (Exception e)
+            {
+                throw;
+            }
         }
 
         [TestMethod]
@@ -82,7 +113,37 @@ namespace TestProject
             {
                 throw;
             }
+        }
 
+        [TestMethod]
+        public void StaticSRet()
+        {
+            try
+            {
+                var @delegate = new WeakDelegate<Func<String, String>>(sSm);
+                var invoke = @delegate.Invoke("sd");
+                Assert.AreEqual(invoke, "sd");
+            }
+            catch (Exception e)
+            {
+                throw;
+            }
+        }
+
+        [TestMethod]
+        public void StaticSRet2()
+        {
+            try
+            {
+                var @delegate = new WeakDelegate<Func<String, String>>(sSm);
+                var del = new WeakDelegate<Func<String, String>>(@delegate);
+                var invoke = del.Invoke("sd");
+                Assert.AreEqual("sd", invoke);
+            }
+            catch (Exception e)
+            {
+                throw;
+            }
         }
 
         [TestMethod]
@@ -98,7 +159,6 @@ namespace TestProject
             {
                 throw;
             }
-
         }
 
         [TestMethod]
@@ -151,6 +211,10 @@ namespace TestProject
         }
 
         public String Sm(String s)
+        {
+            return s;
+        }
+        public static String sSm(String s)
         {
             return s;
         }
