@@ -33,7 +33,7 @@ namespace SUF.Common.GeneralPurpose
     /// <summary>
     /// Как и делегат содержит метод Invoke и может содержать в себе много делегатов но при этом не мешает работать GC
     /// </summary>
-    public sealed class WeakDelegate<TDelegate> : WeakDelegate
+    public sealed class WeakDelegate<TDelegate> : WeakDelegate, IEnumerable<TDelegate>
         where TDelegate:class 
     {
         static WeakDelegate()
@@ -115,6 +115,23 @@ namespace SUF.Common.GeneralPurpose
             invMethod = invokatorType.GetMethod("Invoke");
         }
 
+        public TDelegate ToDelagate()
+        {
+            Delegate @delegate = null;
+            foreach (var d in _invk.GetInvocationList())
+                if (d.Method.IsStatic)
+                    @delegate = Delegate.Combine(@delegate, d);
+
+            foreach (var d in dels)
+            {
+                var target = d.e1.Target;
+                if (target != null)
+                    @delegate = Delegate.Combine (@delegate, Delegate.CreateDelegate (typeof (TDelegate), target, d.e3));
+            }
+
+            return (TDelegate)(object)@delegate;
+        }
+
         /// <summary>Удаляет делегат из списка вызовов</summary>
         /// <returns>Если такой делегат найден внутри и успешно удален</returns>
         public bool Remove(TDelegate @delegate)
@@ -168,16 +185,18 @@ namespace SUF.Common.GeneralPurpose
             }
         }
 
-        /// <summary></summary>
         public void Add(TDelegate @delegate)
         {
             if (@delegate != null)
                 lock (dels)
                     foreach (var del in ((Delegate)(object)@delegate).GetInvocationList())
-                        if(del.Method.IsStatic)
+                    {
+                        var method = del.Method;
+                        if(method.IsStatic)
                             _invk = Delegate.Combine(_invk , del);
                         else
-                            dels.Add(new Tuple<WeakReference, Func<object, object[], object>>(new WeakReference(del.Target), del.Method.GetInvokator()));
+                            dels.Add(new Tuple<WeakReference, Func<object, object[], object>, MethodInfo>(new WeakReference(del.Target), method.GetInvokator(), method));
+                    }
         }
 
         /// <summary>Копирует все списки вызова из целевого делегата</summary>
@@ -221,6 +240,18 @@ namespace SUF.Common.GeneralPurpose
 
         #region Operators
 
+        [DebuggerNonUserCode]
+        public static explicit operator TDelegate(WeakDelegate<TDelegate> wd)
+        {
+            return wd.ToDelagate();
+        }
+
+        [DebuggerNonUserCode]
+        public static explicit operator WeakDelegate<TDelegate>(TDelegate d)
+        {
+            return new WeakDelegate<TDelegate>(d);
+        }
+
         public static WeakDelegate<TDelegate> operator +(WeakDelegate<TDelegate> wd, TDelegate d)
         {
             var D = new WeakDelegate<TDelegate>(wd);
@@ -241,7 +272,7 @@ namespace SUF.Common.GeneralPurpose
         Invokator invokator;
         private static readonly MethodInfo invMethod;
 
-        private List<Tuple<WeakReference, Func<object, object[], object>>> dels = new List<Tuple<WeakReference, Func<object, object[], object>>>();
+        private List<Tuple<WeakReference, Func<object, object[], object>, MethodInfo>> dels = new List<Tuple<WeakReference, Func<object, object[], object>, MethodInfo>>();
 
         private TDelegate _invoke;
         private Delegate _invk
@@ -335,5 +366,25 @@ namespace SUF.Common.GeneralPurpose
                 return del != null ? del._dynamicInvoke(parms) : null;
             }
         }
+
+        #region IEnumerable<TDelegate> Members
+
+        public IEnumerator<TDelegate> GetEnumerator()
+        {
+            Delegate @delegate = (Delegate) (object)ToDelagate();
+            foreach (var del in @delegate.GetInvocationList())
+                yield return (TDelegate) (object) del;
+        }
+
+        #endregion
+
+        #region IEnumerable Members
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        #endregion
     }
 }
