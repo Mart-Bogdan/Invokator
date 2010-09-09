@@ -261,7 +261,7 @@ namespace SUF.Common.GeneralPurpose
         /// <summary>Вызов делегата!</summary>
         public TDelegate Invoke
         {
-            [DebuggerStepThrough]
+            [DebuggerNonUserCode]
             get
             {
                 return _invoke;
