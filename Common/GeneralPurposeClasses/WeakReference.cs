@@ -1,5 +1,4 @@
-﻿// INNAHEMA
-using System;
+﻿using System;
 
 namespace SUF.Common.GeneralPurpose
 {
