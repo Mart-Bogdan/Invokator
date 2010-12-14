@@ -85,6 +85,25 @@ namespace TestProject
         }
 
         [TestMethod]
+        public void ManySubscribers()
+        {
+            try
+            {
+                int count = 5;
+                int I = 0;
+                var @delegate = new WeakDelegate<Action>();
+                for(int i=0; i< count;i++)
+                    @delegate +=()=>I++ ;
+                @delegate.Invoke();
+                Assert.AreEqual(count, I);
+            }
+            catch (Exception e)
+            {
+                throw;
+            }
+        }
+
+        [TestMethod]
         public void UnsubscribeStatic()
         {
             try
