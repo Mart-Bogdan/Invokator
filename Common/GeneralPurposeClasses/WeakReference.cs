@@ -5,7 +5,7 @@ namespace SUF.Common.GeneralPurpose
     /// <summary>
     /// Хранит ссылку на объект, но позволяет сборщику моусора убрать объект
     /// </summary>
-    public class WeakReference<T> where T : class
+    public struct WeakReference<T> where T : class
     {
         /// <summary>
         /// Так а как?
@@ -16,10 +16,8 @@ namespace SUF.Common.GeneralPurpose
         {
             if (target != null)
                 reference = new WeakReference(target);
-        }
-
-        private WeakReference()
-        {
+            else
+                reference = null;
         }
 
         public bool IsAlive
@@ -34,7 +32,7 @@ namespace SUF.Common.GeneralPurpose
         {
             get
             {
-                return reference.Target as T;
+                return reference == null ? null : reference.Target as T;
             }
         }
 
@@ -47,7 +45,7 @@ namespace SUF.Common.GeneralPurpose
         public override int GetHashCode()
         {
             var target = Target;
-            return target != null ? target.GetHashCode() : reference.GetHashCode();
+            return target != null ? target.GetHashCode() : reference != null ? reference.GetHashCode() : 0;
         }
 
         public static implicit operator WeakReference<T>(T t)
