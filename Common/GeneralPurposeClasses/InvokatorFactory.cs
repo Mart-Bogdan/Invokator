@@ -8,21 +8,28 @@ using BLToolkit.Reflection.Emit;
 
 namespace SUF.Common.GeneralPurpose
 {
+    public delegate object Invokation(object target, params object[] args);
+
     public static class InvokatorFactory
     {
-        static Dictionary<MethodInfo, Func<object, object[], object>> cache = new Dictionary<MethodInfo, Func<object, object[], object>>();
+        static Dictionary<MethodInfo, Invokation> cache = new Dictionary<MethodInfo, Invokation>();
         static Random r = new Random();
         private static Type[] _args = new[] { typeof(object), typeof(object[]) };
 
-        public static Func<object, object[], object> GetInvokator(this MethodInfo mi)
+        public static Invokation GetInvokator(this MethodInfo mi)
+        {
+            return GetInvokator(mi, true);
+        }
+
+        public static Invokation GetInvokator(this MethodInfo mi, bool invokeVirtual)
         {
             lock (cache)
             {
-                Func<object, object[], object> fun;
+                Invokation fun;
                 if (cache.TryGetValue(mi, out fun))
                     return fun;
                 
-                var method = new DynamicMethod("_" + r.Next(), typeof(object), _args,
+                var method = new DynamicMethod("_" + r.Next(), mi.DeclaringType ?? typeof(object), _args,
                                                typeof (InvokatorFactory), true);
 
                 var generator = method.GetILGenerator();
@@ -42,13 +49,16 @@ namespace SUF.Common.GeneralPurpose
                         .ldelem_ref
                         .CastFromObject(parameters[i].ParameterType);
                 //--------------------
+                if (invokeVirtual)
+                    helper.callvirt(mi);
+                else
+                    helper.call(mi);
+
                 helper
-                    .call(mi)
                     .parseRet(mi.ReturnType)
                     .ret();
-                
 
-                fun = (Func<object, object[], object>) method.CreateDelegate(typeof (Func<object, object[], object>));
+                fun = (Invokation)method.CreateDelegate(typeof(Invokation));
                 cache.Add (mi, fun);
 
                 return fun;

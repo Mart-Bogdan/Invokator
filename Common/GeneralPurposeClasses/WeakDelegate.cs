@@ -173,7 +173,7 @@ namespace SUF.Common.GeneralPurpose
 
         private void Clean()
         {
-            var toDel = new HashSet<Tuple<WeakReference, Func<object, object[], object>>>();
+            var toDel = new HashSet<Tuple<WeakReference, Invokation>>();
             lock (dels)
             {
                 foreach (var del in dels)
@@ -194,7 +194,7 @@ namespace SUF.Common.GeneralPurpose
                         if(method.IsStatic)
                             _invk = Delegate.Combine(_invk , del);
                         else
-                            dels.Add(new Tuple<WeakReference, Func<object, object[], object>, MethodInfo>(new WeakReference(del.Target), method.GetInvokator(), method));
+                            dels.Add(new Tuple<WeakReference, Invokation, MethodInfo>(new WeakReference(del.Target), method.GetInvokator(), method));
                     }
         }
 
@@ -271,7 +271,7 @@ namespace SUF.Common.GeneralPurpose
         Invokator invokator;
         private static readonly MethodInfo invMethod;
 
-        private List<Tuple<WeakReference, Func<object, object[], object>, MethodInfo>> dels = new List<Tuple<WeakReference, Func<object, object[], object>, MethodInfo>>();
+        private List<Tuple<WeakReference, Invokation, MethodInfo>> dels = new List<Tuple<WeakReference, Invokation, MethodInfo>>();
 
         private TDelegate _invoke;
         private Delegate _invk
@@ -329,7 +329,7 @@ namespace SUF.Common.GeneralPurpose
 
         private object _dynamicInvoke(params object[] parms)
         {
-            var toDel = new List<Tuple<WeakReference, Func<object, object[], object>>>();
+            var toDel = new List<Tuple<WeakReference, Invokation>>();
             object ret = null;
             lock (dels)
             {
