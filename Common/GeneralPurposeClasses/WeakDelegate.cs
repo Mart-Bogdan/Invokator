@@ -324,28 +324,32 @@ namespace SUF.Common.GeneralPurpose
                 }
                 else if (paramSig[i].ParameterType.IsValueType)
                     throw ExceptionHelper.Throw<ArgumentNullException>(
-                        "В пааметра {0} недопустимое значение для не ссылочного типа", i);
+                        "В параметра {0} недопустимое значение для не ссылочного типа", i);
         }
 
         private object _dynamicInvoke(params object[] parms)
         {
             var toDel = new List<Tuple<WeakReference, Invokation>>();
+            var torun = new List<Tuple<WeakReference, Invokation>>();
             object ret = null;
             lock (dels)
             {
                 foreach (var del in dels)
                 {
                     var target = del.e1.Target;
-                    var method = del.e2;
 
-                    if ( target != null)
-                        ret = method.Invoke(target, parms);
+                    if (target != null)
+                        torun.Add(del);
                     else
-                    {
                         toDel.Add(del);
-                    }
                 }
                 dels.RemoveAll(toDel.Contains);
+            }
+            foreach (var del in torun)
+            {
+                var target = del.e1.Target;
+                var method = del.e2;
+                ret = method.Invoke(target, parms);
             }
             return ret;
         }
