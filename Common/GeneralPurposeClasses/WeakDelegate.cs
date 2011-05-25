@@ -166,21 +166,19 @@ namespace SUF.Common.GeneralPurpose
         {
             get
             {
-                Clean();
-                return dels.Count();
+                lock (dels)
+                {
+                    Clean();
+                    return dels.Count;
+                }
             }
         }
 
         private void Clean()
         {
-            var toDel = new HashSet<Tuple<WeakReference, Invokation>>();
             lock (dels)
             {
-                foreach (var del in dels)
-                    if (!del.e1.IsAlive)
-                        toDel.Add(del);
-
-                dels.RemoveAll(toDel.Contains);
+                dels.RemoveAll(del=>!del.e1.IsAlive);
             }
         }
 
@@ -329,25 +327,20 @@ namespace SUF.Common.GeneralPurpose
 
         private object _dynamicInvoke(params object[] parms)
         {
-            var toDel = new List<Tuple<WeakReference, Invokation>>();
-            var torun = new List<Tuple<WeakReference, Invokation>>();
             object ret = null;
+            Tuple<object, Invokation>[] torun;
+            
             lock (dels)
             {
-                foreach (var del in dels)
-                {
-                    var target = del.e1.Target;
-
-                    if (target != null)
-                        torun.Add(del);
-                    else
-                        toDel.Add(del);
-                }
-                dels.RemoveAll(toDel.Contains);
+                Clean();
+                torun = dels.Select(t => new Tuple<object, Invokation>(t.e1.Target, t.e2)).ToArray();  
             }
+            
             foreach (var del in torun)
             {
-                var target = del.e1.Target;
+                var target = del.e1;
+                if (target == null)
+                    continue;
                 var method = del.e2;
                 ret = method.Invoke(target, parms);
             }
