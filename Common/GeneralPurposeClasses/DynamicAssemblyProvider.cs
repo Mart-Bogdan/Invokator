@@ -1,4 +1,4 @@
-﻿ using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -11,6 +11,7 @@ namespace SUF.Common.GeneralPurpose
     public static class DynamicAssemblyProvider
     {
         private static AssemblyBuilder _assembly;
+
         public static AssemblyBuilder Assembly
         {
             get
@@ -42,6 +43,6 @@ namespace SUF.Common.GeneralPurpose
             }
         }
 
-        private static Dictionary<string,ModuleBuilder> modules = new Dictionary<string, ModuleBuilder>();
+        private static Dictionary<string, ModuleBuilder> modules = new Dictionary<string, ModuleBuilder>();
     }
 }

@@ -1,4 +1,4 @@
-﻿ using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -26,37 +26,35 @@ namespace SUF.Common.GeneralPurpose
         /// <exception cref="ArgumentNullException">Попытка передать значение null в тип данных по значению aka. struct</exception>
         public abstract object DynamicInvoke(params object[] parms);
 
-        internal WeakDelegate(){}
+        internal WeakDelegate() { }
     }
 
     /// <summary>
     /// Как и делегат содержит метод Invoke и может содержать в себе много делегатов но при этом не мешает работать GC
     /// </summary>
     public sealed class WeakDelegate<TDelegate> : WeakDelegate, IEnumerable<TDelegate>
-        where TDelegate:class 
+        where TDelegate : class
     {
         static WeakDelegate()
         {
             if (!(typeof(TDelegate).GetParents().Contains(typeof(MulticastDelegate))))
                 throw ExceptionHelper.Throw<NotSupportedException>(
                     "Параметер типа для {0} должен быть делегат а не {1}",
-                    "WeakDelegate<TDelegate>", typeof (TDelegate).Name);
+                    "WeakDelegate<TDelegate>", typeof(TDelegate).Name);
 
             var signature = typeof(TDelegate).GetMethod("Invoke");
             paramSig = signature.GetParameters().ToArray();
 
-            if(paramSig.Length!=0 && paramSig.FirstOrDefault(p=>p.IsOut|p.IsRetval)!=null)
+            if (paramSig.Length != 0 && paramSig.FirstOrDefault(p => p.IsOut | p.IsRetval) != null)
                 throw ExceptionHelper.Throw<NotSupportedException>(
                     "Делегаты с типом праметров Ret/Out пока не потдерживаются, если надо обращайтесь к winnie");
 
             var module = DynamicAssemblyProvider.GetModule("WeakDelegation");
 
-            var typeBuilder = module.DefineType("Invokator_"+typeof(TDelegate),TypeAttributes.Sealed,typeof(Invokator));
+            var typeBuilder = module.DefineType("Invokator_" + typeof(TDelegate), TypeAttributes.Sealed, typeof(Invokator));
 
-            var constructor 
-                = typeBuilder.DefineConstructor(MethodAttributes.Private,CallingConventions.Any,new []{typeof(WeakDelegate<TDelegate>)});
-
-
+            var constructor
+                = typeBuilder.DefineConstructor(MethodAttributes.Private, CallingConventions.Any, new[] { typeof(WeakDelegate<TDelegate>) });
 
             new EmitHelper(constructor.GetILGenerator())
                 .ldarg_0
@@ -64,15 +62,15 @@ namespace SUF.Common.GeneralPurpose
                 .call(typeof(Invokator).GetConstructors((BindingFlags)(-1)).First())
                 .ret();
 
-            var met 
-                = typeBuilder.DefineMethod("Invoke",MethodAttributes.Public,CallingConventions.HasThis,signature.ReturnType,paramSig.Select(p=>p.ParameterType).ToArray());
-             
+            var met
+                = typeBuilder.DefineMethod("Invoke", MethodAttributes.Public, CallingConventions.HasThis, signature.ReturnType, paramSig.Select(p => p.ParameterType).ToArray());
+
             var met_helper = new EmitHelper(met.GetILGenerator());
 
             met_helper = met_helper
                 .ldarg_0
                 .ldc_i4_(paramSig.Length)
-                .newarr(typeof (object));
+                .newarr(typeof(object));
 
             for (int i = 1; i <= paramSig.Length; i++)
             {
@@ -80,14 +78,13 @@ namespace SUF.Common.GeneralPurpose
                     .dup
                     .ldc_i4_(i - 1)
                     .ldarg(i)
-                    .boxIfValueType(paramSig[i-1].ParameterType)
+                    .boxIfValueType(paramSig[i - 1].ParameterType)
                     .stelem_ref;
             }
-            
 
             met_helper
-                .call(typeof (Invokator).GetMethod("DynamicInvoke",(BindingFlags)(-1)));
-            if (signature.ReturnType != typeof (void))
+                .call(typeof(Invokator).GetMethod("DynamicInvoke", (BindingFlags)(-1)));
+            if (signature.ReturnType != typeof(void))
                 met_helper
                     .unboxIfValueType(signature.ReturnType)
                     .ret();
@@ -108,8 +105,8 @@ namespace SUF.Common.GeneralPurpose
 
             invokator_creator =
                 (Func<WeakDelegate<TDelegate>, Invokator>)
-                Delegate.CreateDelegate(typeof (Func<WeakDelegate<TDelegate>, Invokator>),
-                                        invokatorType.GetMethod("Instantiate", (BindingFlags) (-1)));
+                Delegate.CreateDelegate(typeof(Func<WeakDelegate<TDelegate>, Invokator>),
+                                        invokatorType.GetMethod("Instantiate", (BindingFlags)(-1)));
 
             invMethod = invokatorType.GetMethod("Invoke");
         }
@@ -125,7 +122,7 @@ namespace SUF.Common.GeneralPurpose
             {
                 var target = d.e1.Target;
                 if (target != null)
-                    @delegate = Delegate.Combine (@delegate, Delegate.CreateDelegate (typeof (TDelegate), target, d.e3));
+                    @delegate = Delegate.Combine(@delegate, Delegate.CreateDelegate(typeof(TDelegate), target, d.e3));
             }
 
             return (TDelegate)(object)@delegate;
@@ -161,7 +158,6 @@ namespace SUF.Common.GeneralPurpose
             return false;
         }
 
-
         public int Count
         {
             get
@@ -178,7 +174,7 @@ namespace SUF.Common.GeneralPurpose
         {
             lock (dels)
             {
-                dels.RemoveAll(del=>!del.e1.IsAlive);
+                dels.RemoveAll(del => !del.e1.IsAlive);
             }
         }
 
@@ -189,8 +185,8 @@ namespace SUF.Common.GeneralPurpose
                     foreach (var del in ((Delegate)(object)@delegate).GetInvocationList())
                     {
                         var method = del.Method;
-                        if(method.IsStatic)
-                            _invk = Delegate.Combine(_invk , del);
+                        if (method.IsStatic)
+                            _invk = Delegate.Combine(_invk, del);
                         else
                             dels.Add(new Tuple<WeakReference, Invokation, MethodInfo>(new WeakReference(del.Target), method.GetInvokator(), method));
                     }
@@ -232,8 +228,9 @@ namespace SUF.Common.GeneralPurpose
         {
             invokator = invokator_creator(this);
             _invoke = (TDelegate)(object)MulticastDelegate.CreateDelegate(typeof(TDelegate), invokator, invMethod);
-        } 
-        #endregion
+        }
+
+        #endregion Constructors
 
         #region Operators
 
@@ -263,8 +260,7 @@ namespace SUF.Common.GeneralPurpose
             return D;
         }
 
-
-        #endregion
+        #endregion Operators
 
         Invokator invokator;
         private static readonly MethodInfo invMethod;
@@ -272,6 +268,7 @@ namespace SUF.Common.GeneralPurpose
         private List<Tuple<WeakReference, Invokation, MethodInfo>> dels = new List<Tuple<WeakReference, Invokation, MethodInfo>>();
 
         private TDelegate _invoke;
+
         private Delegate _invk
         {
             get
@@ -283,7 +280,8 @@ namespace SUF.Common.GeneralPurpose
                 _invoke = (TDelegate)(object)value;
             }
         }
-        private static Func<WeakDelegate<TDelegate>,Invokator> invokator_creator;
+
+        private static Func<WeakDelegate<TDelegate>, Invokator> invokator_creator;
         private static ParameterInfo[] paramSig;
 
         /// <summary>Вызов делегата!</summary>
@@ -329,13 +327,13 @@ namespace SUF.Common.GeneralPurpose
         {
             object ret = null;
             Tuple<object, Invokation>[] torun;
-            
+
             lock (dels)
             {
                 Clean();
-                torun = dels.Select(t => new Tuple<object, Invokation>(t.e1.Target, t.e2)).ToArray();  
+                torun = dels.Select(t => new Tuple<object, Invokation>(t.e1.Target, t.e2)).ToArray();
             }
-            
+
             foreach (var del in torun)
             {
                 var target = del.e1;
@@ -346,7 +344,7 @@ namespace SUF.Common.GeneralPurpose
             }
             return ret;
         }
-    
+
         /// <summary> Используется во внутренних целях для вызовов делегатов </summary>
         public abstract class Invokator
         {
@@ -367,12 +365,12 @@ namespace SUF.Common.GeneralPurpose
 
         public IEnumerator<TDelegate> GetEnumerator()
         {
-            Delegate @delegate = (Delegate) (object)ToDelagate();
+            Delegate @delegate = (Delegate)(object)ToDelagate();
             foreach (var del in @delegate.GetInvocationList())
-                yield return (TDelegate) (object) del;
+                yield return (TDelegate)(object)del;
         }
 
-        #endregion
+        #endregion IEnumerable<TDelegate> Members
 
         #region IEnumerable Members
 
@@ -381,6 +379,6 @@ namespace SUF.Common.GeneralPurpose
             return GetEnumerator();
         }
 
-        #endregion
+        #endregion IEnumerable Members
     }
 }

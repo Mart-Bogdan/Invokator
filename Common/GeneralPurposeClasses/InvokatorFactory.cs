@@ -1,4 +1,4 @@
-﻿ using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -28,9 +28,9 @@ namespace SUF.Common.GeneralPurpose
                 Invokation fun;
                 if (cache.TryGetValue(mi, out fun))
                     return fun;
-                
+
                 var method = new DynamicMethod("_" + r.Next(), mi.DeclaringType ?? typeof(object), _args,
-                                               typeof (InvokatorFactory), true);
+                                               typeof(InvokatorFactory), true);
 
                 var generator = method.GetILGenerator();
                 var helper = new EmitHelper(generator);
@@ -59,7 +59,7 @@ namespace SUF.Common.GeneralPurpose
                     .ret();
 
                 fun = (Invokation)method.CreateDelegate(typeof(Invokation));
-                cache.Add (mi, fun);
+                cache.Add(mi, fun);
 
                 return fun;
             }
