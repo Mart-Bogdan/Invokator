@@ -12,35 +12,46 @@ namespace SUF.Common.GeneralPurpose
 
     public static class InvokatorFactory
     {
-        static Dictionary<MethodInfo, Invokation> cache = new Dictionary<MethodInfo, Invokation>();
+        static Dictionary<System.Tuple<MethodInfo, bool>, Invokation> cache = new Dictionary<System.Tuple<MethodInfo, bool>, Invokation>();
         static Random r = new Random();
         private static Type[] _args = new[] { typeof(object), typeof(object[]) };
 
-        public static Invokation GetInvokator(this MethodInfo mi)
+        public static Invokation GetInvokator(this MethodInfo methodInfo)
         {
-            return GetInvokator(mi, true);
+            return GetInvokator(methodInfo, true);
         }
 
-        public static Invokation GetInvokator(this MethodInfo mi, bool invokeVirtual)
+        public static Invokation GetInvokator(this MethodInfo methodInfo, bool invokeVirtual)
         {
             lock (cache)
             {
                 Invokation fun;
-                if (cache.TryGetValue(mi, out fun))
-                    return fun;
+                var methodKey = new System.Tuple<MethodInfo, bool>(methodInfo, invokeVirtual);
+                if (!cache.TryGetValue(methodKey, out fun))
+                {
+                    fun = BuildInvokator(methodInfo, invokeVirtual);
+                    cache.Add(methodKey, fun);
+                }
 
-                var method = new DynamicMethod("_" + r.Next(), mi.DeclaringType ?? typeof(object), _args,
+                    return fun;
+            }
+        }
+
+        private static Invokation BuildInvokator(MethodInfo methodInfo, bool invokeVirtual)
+        {
+            Invokation fun;
+            var method = new DynamicMethod("_" + r.Next(), methodInfo.DeclaringType ?? typeof(object), _args,
                                                typeof(InvokatorFactory), true);
 
                 var generator = method.GetILGenerator();
                 var helper = new EmitHelper(generator);
-                var parameters = mi.GetParameters();
+            var parameters = methodInfo.GetParameters();
                 var len = parameters.Length;
                 //--------------------
-                if (!mi.IsStatic)
+            if (!methodInfo.IsStatic)
                     helper
                         .ldarg_0
-                        .castclass(mi.DeclaringType);
+                    .castclass(methodInfo.DeclaringType);
                 //--------------------
                 for (int i = 0; i < len; i++)
                     helper
@@ -50,20 +61,17 @@ namespace SUF.Common.GeneralPurpose
                         .CastFromObject(parameters[i].ParameterType);
                 //--------------------
                 if (invokeVirtual)
-                    helper.callvirt(mi);
+                helper.callvirt(methodInfo);
                 else
-                    helper.call(mi);
+                helper.call(methodInfo);
 
                 helper
-                    .parseRet(mi.ReturnType)
+                .parseRet(methodInfo.ReturnType)
                     .ret();
 
                 fun = (Invokation)method.CreateDelegate(typeof(Invokation));
-                cache.Add(mi, fun);
-
                 return fun;
             }
-        }
 
         private static EmitHelper parseRet(this EmitHelper hlpr, Type t)
         {

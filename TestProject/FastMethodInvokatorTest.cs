@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reflection;
 using System.Text;
 using System.Collections.Generic;
 using System.Linq;
@@ -38,32 +39,10 @@ namespace TestProject
             }
         }
 
-        #region Additional test attributes
-        //
-        // You can use the following additional attributes as you write your tests:
-        //
-        // Use ClassInitialize to run code before running the first test in the class
-        // [ClassInitialize()]
-        // public static void MyClassInitialize(TestContext testContext) { }
-        //
-        // Use ClassCleanup to run code after all tests in a class have run
-        // [ClassCleanup()]
-        // public static void MyClassCleanup() { }
-        //
-        // Use TestInitialize to run code before running each test 
-        // [TestInitialize()]
-        // public void MyTestInitialize() { }
-        //
-        // Use TestCleanup to run code after each test has run
-        // [TestCleanup()]
-        // public void MyTestCleanup() { }
-        //
-        #endregion
-
         [TestMethod]
         public void TestVoidMethod()
         {
-            var o = GetType().GetMethod("SomeVoidMet").GetInvokator()(this,new object[]{10,"sdf"});
+            var o = GetType().GetMethod("SomeVoidMet").GetInvokator()(this, new object[] { 10, "sdf" });
         }
 
         [TestMethod]
@@ -84,6 +63,48 @@ namespace TestProject
             var o = GetType().GetMethod("SomeStatMet").GetInvokator()(this, new object[] { 10, "sdf" });
         }
 
+        [TestMethod]
+        public void TestInvocatorsCache()
+        {
+            MethodInfo methodInfo = GetType().GetMethod("SomeStatMet");
+
+            var orig = methodInfo.GetInvokator();
+            var origTrue = methodInfo.GetInvokator(true);
+            var origFalse = methodInfo.GetInvokator(false);
+            var second = methodInfo.GetInvokator();
+            var secondTrue = methodInfo.GetInvokator(true);
+
+            Assert.AreSame(orig, second);
+            Assert.AreNotSame(orig, origFalse, "Incorrect override");
+            Assert.AreSame(orig, origTrue, "Incorrect override");
+            Assert.AreSame(origTrue, secondTrue);
+        }
+
+        [TestMethod]
+        public void TestOverrideIgnoring()
+        {
+            var obj_ToString = typeof(Object).GetMethod("ToString");
+            var inh_ToString = GetType().GetMethod("ToString");
+
+            Assert.AreEqual(
+                ToString(),
+                obj_ToString.GetInvokator().Invoke(this));
+            Assert.AreEqual(
+                ToString(),
+                inh_ToString.GetInvokator().Invoke(this));
+            Assert.AreEqual(
+                obj_ToString.GetInvokator().Invoke(this),
+                inh_ToString.GetInvokator().Invoke(this));
+            Assert.AreEqual(
+                base.ToString(),
+                obj_ToString.GetInvokator(false).Invoke(this));
+            Assert.AreNotEqual(
+                obj_ToString.GetInvokator(false).Invoke(this),
+                inh_ToString.GetInvokator().Invoke(this));
+        }
+
+        #region MethodsToCall
+
         public void SomeVoidMet(int i, string ss)
         {
         }
@@ -102,5 +123,12 @@ namespace TestProject
         {
             return ss;
         }
+
+        public override string ToString()
+        {
+            return "ToString";
+        }
+
+        #endregion MethodsToCall
     }
 }
