@@ -120,9 +120,9 @@ namespace SUF.Common.GeneralPurpose
 
             foreach (var d in dels)
             {
-                var target = d.e1.Target;
+                var target = d.Item1.Target;
                 if (target != null)
-                    @delegate = Delegate.Combine(@delegate, Delegate.CreateDelegate(typeof(TDelegate), target, d.e3));
+                    @delegate = Delegate.Combine(@delegate, Delegate.CreateDelegate(typeof(TDelegate), target, d.Item3));
             }
 
             return (TDelegate)(object)@delegate;
@@ -139,7 +139,7 @@ namespace SUF.Common.GeneralPurpose
                         if (del.Method.IsStatic)
                             _invk = Delegate.Remove(_invk, del);
                         else
-                            c += dels.RemoveAll(d => d.e1.Target == del.Target & d.e2 == del.Method.GetInvokator());
+                            c += dels.RemoveAll(d => d.Item1.Target == del.Target & d.Item2 == del.Method.GetInvokator());
 
             return c != 0;
         }
@@ -152,7 +152,7 @@ namespace SUF.Common.GeneralPurpose
                         if (del.Method.IsStatic)
                             return _invk.GetInvocationList().Contains(del);
                         else
-                            if (!dels.Where(d => d.e1.Target == del.Target & d.e2 == del.Method.GetInvokator()).IsEmpty())
+                            if (!dels.Where(d => d.Item1.Target == del.Target & d.Item2 == del.Method.GetInvokator()).IsEmpty())
                                 return true;
 
             return false;
@@ -174,7 +174,7 @@ namespace SUF.Common.GeneralPurpose
         {
             lock (dels)
             {
-                dels.RemoveAll(del => !del.e1.IsAlive);
+                dels.RemoveAll(del => !del.Item1.IsAlive);
             }
         }
 
@@ -331,15 +331,15 @@ namespace SUF.Common.GeneralPurpose
             lock (dels)
             {
                 Clean();
-                torun = dels.Select(t => new Tuple<object, Invokation>(t.e1.Target, t.e2)).ToArray();
+                torun = dels.Select(t => new Tuple<object, Invokation>(t.Item1.Target, t.Item2)).ToArray();
             }
 
             foreach (var del in torun)
             {
-                var target = del.e1;
+                var target = del.Item1;
                 if (target == null)
                     continue;
-                var method = del.e2;
+                var method = del.Item2;
                 ret = method.Invoke(target, parms);
             }
             return ret;
