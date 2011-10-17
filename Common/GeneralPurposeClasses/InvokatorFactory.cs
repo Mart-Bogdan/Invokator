@@ -12,9 +12,9 @@ namespace SUF.Common.GeneralPurpose
 
     public static class InvokatorFactory
     {
-        static Dictionary<System.Tuple<MethodInfo, bool>, Invokation> cache = new Dictionary<System.Tuple<MethodInfo, bool>, Invokation>();
-        static Random r = new Random();
-        private static Type[] _args = new[] { typeof(object), typeof(object[]) };
+        static readonly Dictionary<System.Tuple<MethodInfo, bool>, Invokation> cache = new Dictionary<System.Tuple<MethodInfo, bool>, Invokation>();
+        static Int64 count = 0;
+        private static readonly Type[] _args = new[] { typeof(object), typeof(object[]) };
 
         public static Invokation GetInvokator(this MethodInfo methodInfo)
         {
@@ -39,8 +39,7 @@ namespace SUF.Common.GeneralPurpose
 
         private static Invokation BuildInvokator(MethodInfo methodInfo, bool invokeVirtual)
         {
-            Invokation fun;
-            var method = new DynamicMethod("_" + r.Next(), methodInfo.DeclaringType ?? typeof(object), _args,
+            var method = new DynamicMethod("_" + count++, typeof(object), _args,
                                                typeof(InvokatorFactory), true);
 
                 var generator = method.GetILGenerator();
@@ -69,7 +68,7 @@ namespace SUF.Common.GeneralPurpose
                 .parseRet(methodInfo.ReturnType)
                     .ret();
 
-                fun = (Invokation)method.CreateDelegate(typeof(Invokation));
+                var fun = (Invokation)method.CreateDelegate(typeof(Invokation));
                 return fun;
             }
 
