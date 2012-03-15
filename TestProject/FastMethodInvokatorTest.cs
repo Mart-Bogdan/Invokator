@@ -3,67 +3,43 @@ using System.Reflection;
 using System.Text;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 using SUF.Common.GeneralPurpose;
 
 namespace TestProject
 {
-    /// <summary>
-    /// Summary description for FastMethodInvokatorTest
-    /// </summary>
-    [TestClass]
+    [TestFixture]
     public class FastMethodInvokatorTest
     {
-        public FastMethodInvokatorTest()
-        {
-            //
-            // TODO: Add constructor logic here
-            //
-        }
-
-        private TestContext testContextInstance;
-
-        /// <summary>
-        ///Gets or sets the test context which provides
-        ///information about and functionality for the current test run.
-        ///</summary>
-        public TestContext TestContext
-        {
-            get
-            {
-                return testContextInstance;
-            }
-            set
-            {
-                testContextInstance = value;
-            }
-        }
-
-        [TestMethod]
+        [TestCase()]
         public void TestVoidMethod()
         {
             var o = GetType().GetMethod("SomeVoidMet").GetInvokator()(this, new object[] { 10, "sdf" });
+            Assert.AreEqual(null, o);
         }
 
-        [TestMethod]
+        [TestCase]
         public void TestIntMethod()
         {
             var o = GetType().GetMethod("SomeIntMet").GetInvokator()(this, new object[] { 10, "sdf" });
+            Assert.AreEqual(10, o);
         }
 
-        [TestMethod]
+        [TestCase]
         public void TestStrMethod()
         {
             var o = GetType().GetMethod("SomeStrMet").GetInvokator()(this, new object[] { 10, "sdf" });
+            Assert.AreEqual("sdf", o);
         }
 
-        [TestMethod]
+        [TestCase]
         public void TestStatMethod()
         {
             var o = GetType().GetMethod("SomeStatMet").GetInvokator()(this, new object[] { 10, "sdf" });
+            Assert.AreEqual("sdf", o);
         }
 
-        [TestMethod]
+        [TestCase]
         public void TestInvocatorsCache()
         {
             MethodInfo methodInfo = GetType().GetMethod("SomeStatMet");
@@ -80,7 +56,7 @@ namespace TestProject
             Assert.AreSame(origTrue, secondTrue);
         }
 
-        [TestMethod]
+        [TestCase]
         public void TestOverrideIgnoring()
         {
             var obj_ToString = typeof(Object).GetMethod("ToString");

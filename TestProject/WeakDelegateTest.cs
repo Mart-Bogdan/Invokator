@@ -1,35 +1,12 @@
 ﻿using System;
-using System.Text;
-using System.Collections.Generic;
-using System.Linq;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 using SUF.Common.GeneralPurpose;
 
 namespace TestProject
 {
-    /// <summary>
-    /// Summary description for WeakDelegateTest
-    /// </summary>
-    [TestClass]
+    [TestFixture]
     public class WeakDelegateTest
     {
-        private TestContext testContextInstance;
-
-        /// <summary>
-        ///Gets or sets the test context which provides
-        ///information about and functionality for the current test run.
-        ///</summary>
-        public TestContext TestContext
-        {
-            get
-            {
-                return testContextInstance;
-            }
-            set
-            {
-                testContextInstance = value;
-            }
-        }
 
         #region Additional test attributes
         //
@@ -53,7 +30,7 @@ namespace TestProject
         //
         #endregion
 
-        [TestMethod]
+        [Test]
         public void SRet_2p()
         {
             try
@@ -68,7 +45,7 @@ namespace TestProject
             }
         }
 
-        [TestMethod]
+        [Test]
         public void Unsubscribe()
         {
             try
@@ -84,7 +61,7 @@ namespace TestProject
             }
         }
 
-        [TestMethod]
+        [Test]
         public void ManySubscribers()
         {
             try
@@ -103,7 +80,7 @@ namespace TestProject
             }
         }
 
-        [TestMethod]
+        [Test]
         public void UnsubscribeStatic()
         {
             try
@@ -119,7 +96,7 @@ namespace TestProject
             }
         }
 
-        [TestMethod]
+        [Test]
         public void SRet()
         {
             try
@@ -134,7 +111,7 @@ namespace TestProject
             }
         }
 
-        [TestMethod]
+        [Test]
         public void StaticSRet()
         {
             try
@@ -149,7 +126,7 @@ namespace TestProject
             }
         }
 
-        [TestMethod]
+        [Test]
         public void StaticSRet2()
         {
             try
@@ -165,7 +142,7 @@ namespace TestProject
             }
         }
 
-        [TestMethod]
+        [Test]
         public void DynInvSret_2p()
         {
             try
@@ -180,7 +157,7 @@ namespace TestProject
             }
         }
 
-        [TestMethod]
+        [Test]
         public void VoidRet()
         {
             try
@@ -196,7 +173,7 @@ namespace TestProject
 
         }
 
-        [TestMethod]
+        [Test]
         public void IntRet()
         {
             try
@@ -212,7 +189,7 @@ namespace TestProject
 
         }
 
-        [TestMethod]
+        [Test]
         public void GuidRet()
         {
             try
