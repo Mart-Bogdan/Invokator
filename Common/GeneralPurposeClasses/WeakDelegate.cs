@@ -340,7 +340,16 @@ namespace SUF.Common.GeneralPurpose
                 if (target == null)
                     continue;
                 var method = del.Item2;
+                try
+                {
                 ret = method.Invoke(target, parms);
+
+                }
+                catch (Exception e)
+                {
+                    ExceptionHelper.Catch(e, "Excxeption in invocation");
+                    throw;
+                }
             }
             return ret;
         }
