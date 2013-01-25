@@ -170,6 +170,7 @@ namespace SUF.Common.GeneralPurpose
             }
         }
 
+        [DebuggerStepThrough]
         private void Clean()
         {
             lock (dels)
@@ -323,6 +324,7 @@ namespace SUF.Common.GeneralPurpose
                         "В параметра {0} недопустимое значение для не ссылочного типа", i);
         }
 
+        [DebuggerStepThrough]
         private object _dynamicInvoke(params object[] parms)
         {
             object ret = null;
@@ -343,7 +345,6 @@ namespace SUF.Common.GeneralPurpose
                 try
                 {
                 ret = method.Invoke(target, parms);
-
                 }
                 catch (Exception e)
                 {
@@ -364,6 +365,7 @@ namespace SUF.Common.GeneralPurpose
                 del = @delegate;
             }
 
+            [DebuggerNonUserCode]
             protected object DynamicInvoke(params object[] parms)
             {
                 return del != null ? del._dynamicInvoke(parms) : null;
