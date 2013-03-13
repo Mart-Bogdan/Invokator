@@ -42,42 +42,41 @@ namespace SUF.Common.GeneralPurpose
             var method = new DynamicMethod("_" + count++, typeof(object), _args,
                                                typeof(InvokatorFactory), true);
 
-                var generator = method.GetILGenerator();
-                var helper = new EmitHelper(generator);
+            var generator = method.GetILGenerator();
             var parameters = methodInfo.GetParameters();
-                var len = parameters.Length;
+            var len = parameters.Length;
                 //--------------------
             if (!methodInfo.IsStatic)
-                    helper
-                        .ldarg_0
-                    .castclass(methodInfo.DeclaringType);
-                //--------------------
-                for (int i = 0; i < len; i++)
-                    helper
-                        .ldarg_1
-                        .ldc_i4_(i)
-                        .ldelem_ref
-                        .CastFromObject(parameters[i].ParameterType);
-                //--------------------
-                if (invokeVirtual)
-                helper.callvirt(methodInfo);
-                else
-                helper.call(methodInfo);
-
-                helper
-                .parseRet(methodInfo.ReturnType)
-                    .ret();
-
-                var fun = (Invokation)method.CreateDelegate(typeof(Invokation));
-                return fun;
+            {
+                generator.Emit(OpCodes.Ldarg_0);
+                generator.Emit(OpCodes.Castclass, methodInfo.DeclaringType);
             }
+            //--------------------
+            for (int i = 0; i < len; i++)
+            {
+                var type = parameters[i].ParameterType;
+                generator.Emit(OpCodes.Ldarg_1);
+                generator.Emit(OpCodes.Ldc_I4_S, i);
+                generator.Emit(OpCodes.Ldelem_Ref);
 
-        private static EmitHelper parseRet(this EmitHelper hlpr, Type t)
-        {
-            if (t.Equals(typeof(void)))
-                return hlpr.ldnull;
+                generator.Emit(!type.IsValueType ? OpCodes.Castclass : OpCodes.Unbox_Any, type);
+            }
+            //--------------------
+            generator.Emit( invokeVirtual ? OpCodes.Callvirt : OpCodes.Call, methodInfo);
+
+            var returnType = methodInfo.ReturnType;
+
+            if (returnType == typeof(void))
+                generator.Emit(OpCodes.Ldnull);
             else
-                return hlpr.boxIfValueType(t);
+            {
+                if (returnType.IsValueType)
+                    generator.Emit(OpCodes.Box, returnType);
+            }
+            generator.Emit(OpCodes.Ret);
+
+            var fun = (Invokation)method.CreateDelegate(typeof(Invokation));
+            return fun;
         }
     }
 }

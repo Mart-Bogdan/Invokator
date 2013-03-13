@@ -56,50 +56,48 @@ namespace SUF.Common.GeneralPurpose
             var constructor
                 = typeBuilder.DefineConstructor(MethodAttributes.Private, CallingConventions.Any, new[] { typeof(WeakDelegate<TDelegate>) });
 
-            new EmitHelper(constructor.GetILGenerator())
-                .ldarg_0
-                .ldarg_1
-                .call(typeof(Invokator).GetConstructors((BindingFlags)(-1)).First())
-                .ret();
+            var generator = constructor.GetILGenerator();
 
+            generator.Emit(OpCodes.Ldarg_0);
+            generator.Emit(OpCodes.Ldarg_1);
+            generator.Emit(OpCodes.Call,typeof(Invokator).GetConstructors((BindingFlags)(-1)).First());
+            
             var met
                 = typeBuilder.DefineMethod("Invoke", MethodAttributes.Public, CallingConventions.HasThis, signature.ReturnType, paramSig.Select(p => p.ParameterType).ToArray());
 
-            var met_helper = new EmitHelper(met.GetILGenerator());
 
-            met_helper = met_helper
-                .ldarg_0
-                .ldc_i4_(paramSig.Length)
-                .newarr(typeof(object));
+            generator = met.GetILGenerator();
+            
+            generator.Emit(OpCodes.Ldarg_0);
+            generator.Emit(OpCodes.Ldc_I4, paramSig.Length);
+            generator.Emit(OpCodes.Newarr,typeof(object));
 
             for (int i = 1; i <= paramSig.Length; i++)
             {
-                met_helper = met_helper
-                    .dup
-                    .ldc_i4_(i - 1)
-                    .ldarg(i)
-                    .boxIfValueType(paramSig[i - 1].ParameterType)
-                    .stelem_ref;
+                generator.Emit(OpCodes.Dup);
+                generator.Emit(OpCodes.Ldc_I4, i - 1);
+                generator.Emit(OpCodes.Ldarg, i);
+                if (paramSig[i - 1].ParameterType.IsValueType)
+                    generator.Emit(OpCodes.Box, paramSig[i - 1].ParameterType);
+                generator.Emit(OpCodes.Stelem_Ref);
             }
-
-            met_helper
-                .call(typeof(Invokator).GetMethod("DynamicInvoke", (BindingFlags)(-1)));
+            generator.Emit(OpCodes.Call, typeof(Invokator).GetMethod("DynamicInvoke", (BindingFlags)(-1)));
             if (signature.ReturnType != typeof(void))
-                met_helper
-                    .unboxIfValueType(signature.ReturnType)
-                    .ret();
+                generator.Emit(!signature.ReturnType.IsValueType ? OpCodes.Castclass : OpCodes.Unbox_Any, signature.ReturnType);
             else
-                met_helper
-                    .pop
-                    .ret();
+                generator.Emit(OpCodes.Pop);
 
-            new EmitHelper(
-                typeBuilder.DefineMethod("Instantiate", MethodAttributes.Static, typeof(Invokator), new[] { typeof(WeakDelegate<TDelegate>) })
-                    .GetILGenerator())
+            generator.Emit(OpCodes.Ret);
 
-                .ldarg_0
-                .newobj(constructor)
-                .ret();
+            generator = typeBuilder.DefineMethod(
+                    "Instantiate", 
+                    MethodAttributes.Static, typeof (Invokator),
+                    new[] {typeof (WeakDelegate<TDelegate>)}
+                ).GetILGenerator();
+                    
+            generator.Emit(OpCodes.Ldarg_0);
+            generator.Emit(OpCodes.Newobj, constructor);
+            generator.Emit(OpCodes.Ret);
 
             var invokatorType = typeBuilder.CreateType();
 
