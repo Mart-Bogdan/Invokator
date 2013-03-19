@@ -61,6 +61,7 @@ namespace SUF.Common.GeneralPurpose
             generator.Emit(OpCodes.Ldarg_0);
             generator.Emit(OpCodes.Ldarg_1);
             generator.Emit(OpCodes.Call,typeof(Invokator).GetConstructors((BindingFlags)(-1)).First());
+            generator.Emit(OpCodes.Ret);
             
             var met
                 = typeBuilder.DefineMethod("Invoke", MethodAttributes.Public, CallingConventions.HasThis, signature.ReturnType, paramSig.Select(p => p.ParameterType).ToArray());
