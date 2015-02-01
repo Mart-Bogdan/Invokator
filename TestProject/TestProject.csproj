@@ -32,14 +32,22 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="LambdaMicrobenchmarking">
+      <HintPath>..\packages\LambdaMicrobenchmarking.0.1.0\lib\net40-client\LambdaMicrobenchmarking.dll</HintPath>
+    </Reference>
+    <Reference Include="MathNet.Numerics">
+      <HintPath>..\packages\MathNet.Numerics.3.2.3\lib\net40\MathNet.Numerics.dll</HintPath>
+    </Reference>
     <Reference Include="nunit.framework">
       <HintPath>..\packages\NUnit.2.6.4\lib\nunit.framework.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Numerics" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Benchmarks.cs" />
     <Compile Include="FastMethodInvokatorTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="WeakDelegateTest.cs" />

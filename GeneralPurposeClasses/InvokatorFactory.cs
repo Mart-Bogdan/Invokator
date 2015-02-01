@@ -11,7 +11,7 @@ namespace SUF.Common.GeneralPurpose
 
     public static class InvokatorFactory
     {
-        static readonly Dictionary<System.Tuple<MethodInfo, bool>, Invokation> cache = new Dictionary<System.Tuple<MethodInfo, bool>, Invokation>();
+        static readonly Dictionary<Tuple<MethodInfo, bool>, Invokation> cache = new Dictionary<Tuple<MethodInfo, bool>, Invokation>();
         static Int64 count = 0;
         private static readonly Type[] _args = new[] { typeof(object), typeof(object[]) };
 
@@ -25,7 +25,7 @@ namespace SUF.Common.GeneralPurpose
             lock (cache)
             {
                 Invokation fun;
-                var methodKey = new System.Tuple<MethodInfo, bool>(methodInfo, invokeVirtual);
+                var methodKey = new Tuple<MethodInfo, bool>(methodInfo, invokeVirtual);
                 if (!cache.TryGetValue(methodKey, out fun))
                 {
                     fun = BuildInvokator(methodInfo, invokeVirtual);
