@@ -36,7 +36,7 @@ namespace SUF.Common.GeneralPurpose
     {
         static WeakDelegate()
         {
-            if (!(typeof (TDelegate).GetParents().Contains(typeof (MulticastDelegate))))
+            if (!(typeof (TDelegate).IsSubclassOf(typeof (Delegate))))
                 throw new NotSupportedException(string.Format(
                     "Параметер типа для {0} должен быть делегат а не {1}",
                     "WeakDelegate<TDelegate>", typeof (TDelegate).Name));
