@@ -25,6 +25,12 @@ namespace TestProject
             var staticMethod = type.GetMethod("StaticMethod");
             var instanceMethod = type.GetMethod("InstanceMethod");
 
+            for (int i = 0; i < iterCount; i++)
+            {   // JITC warmup
+                StaticMethod();
+                InstanceMethod();
+            }
+
             Script<int>.Of(new[]
             {
                 new Tuple<String, Func<int>>("Reflectional static Invocation", () =>
@@ -79,6 +85,38 @@ namespace TestProject
                     var parameters = new object[0];
                     for (int i = 0; i < iterCount; i++)
                         instanceMethod.GetInvokator().Invoke(this, parameters);
+                    return 1;
+                }),
+            }).WithHead().RunAll();
+        }
+
+        [Test]
+        public void DelegatePerformance()
+        {
+            const int iterCount = 1000;
+
+            Action act = InstanceMethod;
+            WeakDelegate<Action> wd = new WeakDelegate<Action>(InstanceMethod);
+
+            for (int i = 0; i < iterCount; i++)
+            {   // JITC warmup
+                act.Invoke();
+                wd.Invoke.Invoke();
+            }
+
+
+            Script<int>.Of(new[]
+            {
+                new Tuple<String, Func<int>>("Action", () =>
+                {
+                    for (int i = 0; i < iterCount; i++)
+                        act.Invoke();
+                    return 1;
+                }),
+                new Tuple<String, Func<int>>("WeakDelegate<Action>", () =>
+                {
+                    for (int i = 0; i < iterCount; i++)
+                        wd.Invoke();
                     return 1;
                 }),
             }).WithHead().RunAll();
