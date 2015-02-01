@@ -63,16 +63,24 @@ namespace TestProject
                     }
                     return 1;
                 }),
-                //new Tuple<String, Func<int>>("Invocator static Invocation", () =>
-                //{
-                //    var parameters = new object[0];
-                //    for (int i = 0; i < iterCount; i++)
-                //        staticMethod.GetInvokator().Invoke(null, parameters);
-                //    return 1;
-                //}),
+                new Tuple<String, Func<int>>("Invocator static Invocation", () =>
+                {
+                    var parameters = new object[0];
+                    for (int i = 0; i < iterCount; i++)
+                        staticMethod.GetInvokator().Invoke(null, parameters);
+                    return 1;
+                }),
+                new Tuple<String, Func<int>>("Invocator static Invocation(c)", () =>
+                {
+                    var invokation = staticMethod.GetInvokator();
+                    var parameters = new object[0];
+                    for (int i = 0; i < iterCount; i++)
+                        invokation.Invoke(null, parameters);
+                    return 1;
+                }),
                 new Tuple<String, Func<int>>("Invocator inst  Invocation(c)", () =>
                 {
-                        var invokation = instanceMethod.GetInvokator();
+                    var invokation = instanceMethod.GetInvokator();
                     var parameters = new object[0];
                     for (int i = 0; i < iterCount; i++)
                     {

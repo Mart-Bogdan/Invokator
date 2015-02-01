@@ -35,7 +35,7 @@ namespace TestProject
         [TestCase]
         public void TestStatMethod()
         {
-            var o = GetType().GetMethod("SomeStatMet").GetInvokator()(this, new object[] { 10, "sdf" });
+            var o = GetType().GetMethod("SomeStatMet").GetInvokator()(null, new object[] { 10, "sdf" });
             Assert.AreEqual("sdf", o);
         }
 
@@ -95,7 +95,7 @@ namespace TestProject
             return ss;
         }
 
-        public string SomeStatMet(int i, string ss)
+        public static string SomeStatMet(int i, string ss)
         {
             return ss;
         }

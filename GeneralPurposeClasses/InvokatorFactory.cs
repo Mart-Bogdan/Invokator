@@ -38,6 +38,10 @@ namespace SUF.Common.GeneralPurpose
 
         private static Invokation BuildInvokator(MethodInfo methodInfo, bool invokeVirtual)
         {
+            // Callvirt opcode throws exception on static methods
+            if (methodInfo.IsStatic)
+                invokeVirtual = false;
+
             var method = new DynamicMethod("_" + count++, typeof(object), _args,
                                                typeof(InvokatorFactory), true);
 
@@ -54,7 +58,9 @@ namespace SUF.Common.GeneralPurpose
             for (int i = 0; i < len; i++)
             {
                 var type = parameters[i].ParameterType;
-                generator.Emit(OpCodes.Ldarg_1);
+
+                // loading arguments from params array
+                generator.Emit(OpCodes.Ldarg_1);       
                 generator.Emit(OpCodes.Ldc_I4_S, i);
                 generator.Emit(OpCodes.Ldelem_Ref);
 
