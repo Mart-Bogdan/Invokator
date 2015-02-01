@@ -7,8 +7,6 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Text;
-using BLToolkit.Reflection.Emit;
-using JetBrains.Annotations;
 
 namespace SUF.Common.GeneralPurpose
 {
@@ -37,17 +35,17 @@ namespace SUF.Common.GeneralPurpose
     {
         static WeakDelegate()
         {
-            if (!(typeof(TDelegate).GetParents().Contains(typeof(MulticastDelegate))))
-                throw ExceptionHelper.Throw<NotSupportedException>(
+            if (!(typeof (TDelegate).GetParents().Contains(typeof (MulticastDelegate))))
+                throw new NotSupportedException(string.Format(
                     "Параметер типа для {0} должен быть делегат а не {1}",
-                    "WeakDelegate<TDelegate>", typeof(TDelegate).Name);
+                    "WeakDelegate<TDelegate>", typeof (TDelegate).Name));
 
             var signature = typeof(TDelegate).GetMethod("Invoke");
             paramSig = signature.GetParameters().ToArray();
 
             if (paramSig.Length != 0 && paramSig.FirstOrDefault(p => p.IsOut | p.IsRetval) != null)
-                throw ExceptionHelper.Throw<NotSupportedException>(
-                    "Делегаты с типом праметров Ret/Out пока не потдерживаются, если надо обращайтесь к winnie");
+                throw new NotSupportedException(
+                    "Делегаты с типом праметров Ret/Out пока не потдерживаются, если надо обращайтесь к Bogdan Mart");
 
             var module = DynamicAssemblyProvider.GetModule("WeakDelegation");
 
@@ -151,7 +149,7 @@ namespace SUF.Common.GeneralPurpose
                         if (del.Method.IsStatic)
                             return _invk.GetInvocationList().Contains(del);
                         else
-                            if (!dels.Where(d => d.Item1.Target == del.Target & d.Item2 == del.Method.GetInvokator()).IsEmpty())
+                            if (dels.Any(d => d.Item1.Target == del.Target & d.Item2 == del.Method.GetInvokator()))
                                 return true;
 
             return false;
@@ -310,17 +308,17 @@ namespace SUF.Common.GeneralPurpose
         private void CheckParameters(object[] parms)
         {
             if (parms.Length != paramSig.Length)
-                throw ExceptionHelper.Throw<TargetParameterCountException>();
+                throw new TargetParameterCountException();
 
             for (int i = 0; i < parms.Length; i++)
                 if (parms[i] != null)
                 {
                     if (!paramSig[i].ParameterType.IsInstanceOfType(parms[i]))
-                        throw ExceptionHelper.Throw<ArgumentException>("В параметра {0} неправильный тип", i);
+                        throw new ArgumentException(String.Format("В параметра {0} неправильный тип", i));
                 }
                 else if (paramSig[i].ParameterType.IsValueType)
-                    throw ExceptionHelper.Throw<ArgumentNullException>(
-                        "В параметра {0} недопустимое значение для не ссылочного типа", i);
+                    throw new ArgumentException(String.Format(
+                        "В параметра {0} недопустимое значение для не ссылочного типа", i));
         }
 
         [DebuggerStepThrough]
@@ -347,7 +345,7 @@ namespace SUF.Common.GeneralPurpose
                 }
                 catch (Exception e)
                 {
-                    ExceptionHelper.Catch(e, "Excxeption in invocation");
+                    //TODO ExceptionHelper.Catch(e, "Excxeption in invocation");
                     throw;
                 }
             }
