@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using LambdaMicrobenchmarking;
 using NUnit.Framework;
@@ -12,8 +13,10 @@ namespace TestProject
     [TestFixture]
     public class Benchmarks
     {
+        [MethodImpl(MethodImplOptions.NoInlining)]
         public static void StaticMethod() { }
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
         public void InstanceMethod() { }
 
         [Test]
