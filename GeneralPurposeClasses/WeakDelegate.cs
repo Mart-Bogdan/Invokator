@@ -6,6 +6,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Runtime;
 using System.Text;
 
 namespace SUF.Common.GeneralPurpose
@@ -311,6 +312,7 @@ namespace SUF.Common.GeneralPurpose
                 throw new TargetParameterCountException();
 
             for (int i = 0; i < parms.Length; i++)
+            {
                 if (parms[i] != null)
                 {
                     if (!paramSig[i].ParameterType.IsInstanceOfType(parms[i]))
@@ -319,29 +321,31 @@ namespace SUF.Common.GeneralPurpose
                 else if (paramSig[i].ParameterType.IsValueType)
                     throw new ArgumentException(String.Format(
                         "В параметра {0} недопустимое значение для не ссылочного типа", i));
+            }
         }
 
-        [DebuggerStepThrough]
+        //[DebuggerStepThrough]
+        [TargetedPatchingOptOut("Performance critical to inline this type of method across NGen image boundaries")]
         private object _dynamicInvoke(params object[] parms)
         {
             object ret = null;
-            Tuple<object, Invokation>[] torun;
+            Tuple<WeakReference, Invokation, MethodInfo>[] torun;
 
             lock (dels)
             {
                 Clean();
-                torun = dels.Select(t => new Tuple<object, Invokation>(t.Item1.Target, t.Item2)).ToArray();
+                torun = dels.ToArray();
             }
 
             foreach (var del in torun)
             {
-                var target = del.Item1;
+                var target = del.Item1.Target;
                 if (target == null)
                     continue;
                 var method = del.Item2;
                 try
                 {
-                ret = method.Invoke(target, parms);
+                    ret = method.Invoke(target, parms);
                 }
                 catch (Exception e)
                 {
@@ -362,7 +366,8 @@ namespace SUF.Common.GeneralPurpose
                 del = @delegate;
             }
 
-            [DebuggerNonUserCode]
+            //[DebuggerNonUserCode]
+            [TargetedPatchingOptOut("Performance critical to inline this type of method across NGen image boundaries")]
             protected object DynamicInvoke(params object[] parms)
             {
                 return del != null ? del._dynamicInvoke(parms) : null;

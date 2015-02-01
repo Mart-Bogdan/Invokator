@@ -39,6 +39,7 @@
   <ItemGroup>
     <Compile Include="DynamicAssemblyProvider.cs" />
     <Compile Include="InvokatorFactory.cs" />
+    <Compile Include="MyTuple.cs" />
     <Compile Include="TypeExtentions.cs" />
     <Compile Include="WeakDelegate.cs" />
     <Compile Include="WeakReference.cs" />
